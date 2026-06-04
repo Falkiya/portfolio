@@ -141,6 +141,20 @@ export default function InboxDashboard({ isOpen, onClose }) {
               >
                 Visitor Analytics
               </button>
+              <button 
+                onClick={() => setActiveTab('publish')}
+                className="btn-secondary"
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '0.3rem 0.7rem',
+                  borderRadius: '6px',
+                  borderColor: activeTab === 'publish' ? 'var(--accent-cyan)' : 'var(--glass-border)',
+                  color: activeTab === 'publish' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                  cursor: 'pointer'
+                }}
+              >
+                Sync Database
+              </button>
             </div>
           )}
 
@@ -339,7 +353,7 @@ export default function InboxDashboard({ isOpen, onClose }) {
                 )}
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'analytics' ? (
             /* Tab B: Visitor Analytics */
             <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: 'calc(100% - 3.5rem)', padding: '1.5rem', overflowY: 'auto', gap: '1.25rem' }}>
               
@@ -442,6 +456,61 @@ export default function InboxDashboard({ isOpen, onClose }) {
                 </div>
               </div>
 
+            </div>
+          ) : (
+            /* Tab C: Sync Database */
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', flexGrow: 1, height: 'calc(100% - 3.5rem)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Activity size={18} className="text-gradient" />
+                <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>Sync Edits to All Visitors</h4>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                Since this website runs entirely in your browser using local storage, edits you make via pencil buttons are saved only on your current device. 
+                <br /><br />
+                To make your edits permanent for <strong>all visitors</strong> on the internet, copy the configuration code below and send it to your AI developer. The developer will commit it to your GitHub repository to update the global defaults.
+              </p>
+              
+              <textarea 
+                readOnly
+                value={JSON.stringify({
+                  aboutDetails: JSON.parse(localStorage.getItem('falkiya_about_details') || '{}'),
+                  skills: JSON.parse(localStorage.getItem('falkiya_skills') || '[]'),
+                  experience: JSON.parse(localStorage.getItem('falkiya_experience') || '[]'),
+                  educationCredentials: JSON.parse(localStorage.getItem('falkiya_education_credentials') || '{}'),
+                  projects: JSON.parse(localStorage.getItem('falkiya_projects') || '[]')
+                }, null, 2)}
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  resize: 'none'
+                }}
+                onClick={(e) => e.target.select()}
+              />
+              
+              <button 
+                onClick={() => {
+                  const dbData = {
+                    aboutDetails: JSON.parse(localStorage.getItem('falkiya_about_details') || '{}'),
+                    skills: JSON.parse(localStorage.getItem('falkiya_skills') || '[]'),
+                    experience: JSON.parse(localStorage.getItem('falkiya_experience') || '[]'),
+                    educationCredentials: JSON.parse(localStorage.getItem('falkiya_education_credentials') || '{}'),
+                    projects: JSON.parse(localStorage.getItem('falkiya_projects') || '[]')
+                  };
+                  navigator.clipboard.writeText(JSON.stringify(dbData, null, 2));
+                  alert('Database configuration copied to clipboard! Paste it to your AI coder.');
+                }}
+                className="btn btn-primary"
+                style={{ alignSelf: 'flex-start', fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+              >
+                Copy Sync Code
+              </button>
             </div>
           )
         )}
