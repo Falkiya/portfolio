@@ -1,3 +1,5 @@
+import defaultProfilePhoto from '../assets/profile.jpg';
+
 // Pluggable Database Service
 // Currently runs on LocalStorage for instant serverless hosting compatibility.
 // Easily extendable to Firebase Firestore, Supabase, or a custom FastAPI backend.
@@ -12,6 +14,10 @@ const DEFAULT_ABOUT = {
   location: "Mysuru, Karnataka",
   email: "falkiyafreen23@gmail.com",
   phone: "",
+  profilePhoto: defaultProfilePhoto,
+  profilePhotoZoom: 100,
+  profilePhotoX: 50,
+  profilePhotoY: 50,
   roles: [
     "AI Engineer",
     "RAG Applications Developer",
@@ -322,6 +328,13 @@ export const databaseService = {
       return DEFAULT_ABOUT;
     }
     const parsed = JSON.parse(details);
+    if (!parsed.profilePhoto) {
+      parsed.profilePhoto = defaultProfilePhoto;
+      parsed.profilePhotoZoom = 100;
+      parsed.profilePhotoX = 50;
+      parsed.profilePhotoY = 50;
+      localStorage.setItem('falkiya_about_details', JSON.stringify(parsed));
+    }
     if (parsed.phone) {
       parsed.phone = '';
       localStorage.setItem('falkiya_about_details', JSON.stringify(parsed));
