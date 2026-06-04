@@ -10,7 +10,7 @@ const INITIAL_COMMENTS = [];
 
 const DEFAULT_ABOUT = {
   name: "FALKIYA AFREEN",
-  summary: "BCA student (CGPA 8.5 — 5th Sem) with hands-on experience building AI-powered SaaS applications using RAG architecture, LLM APIs, and agentic AI workflows. Shipped a client-facing Study Buddy platform with OpenRouter integration and semantic search. Trained 100+ students on AI tools at college level. Passionate about building practical, production-ready AI products — not just demos.",
+  summary: "AI Engineer & Freelancer. I build smart, real-world AI solutions — from LLMs to automation. Let's turn your ideas into intelligent products.",
   location: "Mysuru, Karnataka",
   email: "falkiyafreen23@gmail.com",
   phone: "",
@@ -333,6 +333,10 @@ export const databaseService = {
       parsed.profilePhotoZoom = 100;
       parsed.profilePhotoX = 50;
       parsed.profilePhotoY = 50;
+      localStorage.setItem('falkiya_about_details', JSON.stringify(parsed));
+    }
+    if (parsed.summary && parsed.summary.includes("BCA student (CGPA 8.5")) {
+      parsed.summary = DEFAULT_ABOUT.summary;
       localStorage.setItem('falkiya_about_details', JSON.stringify(parsed));
     }
     if (parsed.phone) {
