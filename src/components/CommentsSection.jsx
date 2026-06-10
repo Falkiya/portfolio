@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, ThumbsUp, Send, CheckCircle, User } from 'lucide-react';
+import { Star, MessageSquare, ThumbsUp, Send, CheckCircle, User, Pencil, Trash2, X, Save } from 'lucide-react';
 import { databaseService } from '../services/databaseService';
 
-export default function CommentsSection() {
+export default function CommentsSection({ isAdmin = false }) {
   const [comments, setComments] = useState([]);
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
@@ -11,12 +11,27 @@ export default function CommentsSection() {
   const [text, setText] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Editing state
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [editRating, setEditRating] = useState(5);
+
+  const loadComments = async () => {
+    try {
+      const data = await databaseService.getComments();
+      setComments(data || []);
+    } catch (err) {
+      console.error('Failed to fetch comments:', err);
+    }
+  };
 
   useEffect(() => {
-    setComments(databaseService.getComments());
+    loadComments();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !text) {
       setErrorMsg('Name and comment review text are required.');
@@ -30,23 +45,100 @@ export default function CommentsSection() {
       text
     };
 
-    const added = databaseService.addComment(newCommentData);
-    setComments(databaseService.getComments()); // Reload
-    setSuccessMsg('Thank you! Your testimonial comment has been published.');
-    setName('');
-    setRole('');
-    setRating(5);
-    setText('');
-    setErrorMsg('');
-
-    setTimeout(() => {
-      setSuccessMsg('');
-    }, 4000);
+    setLoading(true);
+    try {
+      const added = await databaseService.addComment(newCommentData);
+      
+      // Save secret ownership token for local editing/deleting rights
+      if (added && added.secretToken) {
+        const owned = JSON.parse(localStorage.getItem('falkiya_owned_comments') || '{}');
+        owned[added.id] = added.secretToken;
+        localStorage.setItem('falkiya_owned_comments', JSON.stringify(owned));
+      }
+      
+      await loadComments(); // Reload from database
+      setSuccessMsg('Thank you! Your testimonial comment has been published.');
+      setName('');
+      setRole('');
+      setRating(5);
+      setText('');
+      setErrorMsg('');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setErrorMsg('Failed to save review. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLike = (id) => {
-    databaseService.likeComment(id);
-    setComments(databaseService.getComments()); // Reload updated likes
+  const handleLike = async (comment) => {
+    try {
+      await databaseService.likeComment(comment.id, comment.likes || 0);
+      await loadComments(); // Refresh list to get updated count
+    } catch (err) {
+      console.error('Error liking comment:', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    
+    const owned = JSON.parse(localStorage.getItem('falkiya_owned_comments') || '{}');
+    const token = owned[id] || '';
+    
+    setLoading(true);
+    try {
+      await databaseService.deleteComment(id, token);
+      
+      // Remove local ownership reference
+      delete owned[id];
+      localStorage.setItem('falkiya_owned_comments', JSON.stringify(owned));
+      
+      await loadComments();
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+      alert('Error: Failed to delete comment. You may not have permissions.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartEdit = (comment) => {
+    setEditingId(comment.id);
+    setEditText(comment.text);
+    setEditRating(comment.rating);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+    setEditRating(5);
+  };
+
+  const handleSaveEdit = async (id) => {
+    if (!editText.trim()) return;
+
+    const owned = JSON.parse(localStorage.getItem('falkiya_owned_comments') || '{}');
+    const token = owned[id] || '';
+
+    setLoading(true);
+    try {
+      await databaseService.updateComment(id, { text: editText, rating: editRating }, token);
+      setEditingId(null);
+      await loadComments();
+    } catch (err) {
+      console.error('Failed to edit comment:', err);
+      alert('Error: Failed to save changes. You may not have permissions.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if current visitor owns the comment
+  const isCommentOwner = (commentId) => {
+    const owned = JSON.parse(localStorage.getItem('falkiya_owned_comments') || '{}');
+    return !!owned[commentId];
   };
 
   // Compute averages
@@ -174,8 +266,8 @@ export default function CommentsSection() {
 
                   {errorMsg && <p style={{ color: '#f87171', fontSize: '0.85rem' }}>{errorMsg}</p>}
 
-                  <button type="submit" className="btn btn-primary" style={{ gap: '0.5rem' }}>
-                    <Send size={16} /> Submit Testimonial
+                  <button type="submit" disabled={loading} className="btn btn-primary" style={{ gap: '0.5rem' }}>
+                    <Send size={16} /> {loading ? 'Submitting...' : 'Submit Testimonial'}
                   </button>
                 </form>
               )}
@@ -189,78 +281,165 @@ export default function CommentsSection() {
                 No reviews yet. Be the first to share your experience!
               </div>
             ) : (
-              comments.map((comment) => (
-                <div key={comment.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  
-                  {/* Review Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+              comments.map((comment) => {
+                const showActions = isAdmin || isCommentOwner(comment.id);
+                const isEditing = editingId === comment.id;
+
+                return (
+                  <div key={comment.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        background: 'var(--bg-tertiary)',
-                        border: '1px solid var(--glass-border)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--accent-cyan)'
-                      }}>
-                        <User size={18} />
+                    {/* Review Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--glass-border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--accent-cyan)'
+                        }}>
+                          <User size={18} />
+                        </div>
+                        <div>
+                          <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{comment.name}</h4>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{comment.role}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{comment.name}</h4>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{comment.role}</p>
+
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                          <div style={{ display: 'flex', gap: '0.1rem' }}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star 
+                                key={star} 
+                                size={14} 
+                                fill={star <= (isEditing ? editRating : comment.rating) ? '#facc15' : 'transparent'} 
+                                color={star <= (isEditing ? editRating : comment.rating) ? '#facc15' : 'var(--text-muted)'} 
+                              />
+                            ))}
+                          </div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{comment.date}</span>
+                        </div>
+
+                        {/* Edit and Delete Actions */}
+                        {showActions && !isEditing && (
+                          <div style={{ display: 'flex', gap: '0.4rem', borderLeft: '1px solid var(--glass-border)', paddingLeft: '0.8rem' }}>
+                            <button
+                              onClick={() => handleStartEdit(comment)}
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.2rem', transition: 'var(--transition-smooth)' }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                              title="Edit Review"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(comment.id)}
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.2rem', transition: 'var(--transition-smooth)' }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                              title="Delete Review"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
                       </div>
+
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-                      <div style={{ display: 'flex', gap: '0.1rem' }}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            size={14} 
-                            fill={star <= comment.rating ? '#facc15' : 'transparent'} 
-                            color={star <= comment.rating ? '#facc15' : 'var(--text-muted)'} 
+                    {/* Comment Body / Edit Form */}
+                    {isEditing ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.25rem' }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '0.8rem' }}>Edit Rating</label>
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                type="button"
+                                key={star}
+                                onClick={() => setEditRating(star)}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                              >
+                                <Star 
+                                  size={20} 
+                                  fill={editRating >= star ? '#facc15' : 'transparent'} 
+                                  color={editRating >= star ? '#facc15' : 'var(--text-muted)'} 
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '0.8rem' }}>Edit Review Description</label>
+                          <textarea 
+                            className="form-input"
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            style={{ minHeight: '80px', resize: 'vertical' }}
+                            required
                           />
-                        ))}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+                          <button 
+                            onClick={handleCancelEdit} 
+                            disabled={loading}
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                          >
+                            <X size={12} /> Cancel
+                          </button>
+                          <button 
+                            onClick={() => handleSaveEdit(comment.id)} 
+                            disabled={loading || !editText.trim()}
+                            className="btn btn-primary" 
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                          >
+                            <Save size={12} /> {loading ? 'Saving...' : 'Save Changes'}
+                          </button>
+                        </div>
                       </div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{comment.date}</span>
-                    </div>
+                    ) : (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontStyle: 'italic', wordBreak: 'break-word' }}>
+                        "{comment.text}"
+                      </p>
+                    )}
+
+                    {/* Likes reaction bar */}
+                    {!isEditing && (
+                      <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button 
+                          onClick={() => handleLike(comment)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            fontSize: '0.8rem',
+                            transition: 'var(--transition-smooth)'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                        >
+                          <ThumbsUp size={14} />
+                          <span>Helpful ({comment.likes || 0})</span>
+                        </button>
+                      </div>
+                    )}
 
                   </div>
-
-                  {/* Comment Text */}
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontStyle: 'italic' }}>
-                    "{comment.text}"
-                  </p>
-
-                  {/* Likes reaction bar */}
-                  <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button 
-                      onClick={() => handleLike(comment.id)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--text-muted)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        fontSize: '0.8rem',
-                        transition: 'var(--transition-smooth)'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                    >
-                      <ThumbsUp size={14} />
-                      <span>Helpful ({comment.likes || 0})</span>
-                    </button>
-                  </div>
-
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

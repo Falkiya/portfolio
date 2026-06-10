@@ -207,7 +207,7 @@ export default function App() {
         </Reveal>
         
         <Reveal effect="slide-up">
-          <CommentsSection />
+          <CommentsSection isAdmin={isAdmin} />
         </Reveal>
         <Reveal effect="slide-up">
           <ContactSection />

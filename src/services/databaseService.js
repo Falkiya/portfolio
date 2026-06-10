@@ -1,4 +1,5 @@
 import defaultProfilePhoto from '../assets/profile.jpg';
+import { firebaseService } from './firebaseService';
 
 // Pluggable Database Service
 // Currently runs on LocalStorage for instant serverless hosting compatibility.
@@ -185,7 +186,10 @@ export const databaseService = {
   },
 
   // Get all comments
-  getComments: () => {
+  getComments: async () => {
+    if (firebaseService.isActive()) {
+      return await firebaseService.getComments();
+    }
     let localComments = localStorage.getItem('falkiya_comments');
     // Migration: If the user has the old mock comments stored, clear them out
     if (localComments && localComments.includes('comment-1')) {
@@ -200,13 +204,18 @@ export const databaseService = {
   },
 
   // Add a review comment
-  addComment: (comment) => {
-    const comments = databaseService.getComments();
+  addComment: async (comment) => {
+    if (firebaseService.isActive()) {
+      return await firebaseService.addComment(comment);
+    }
+    const comments = await databaseService.getComments();
+    const secretToken = Math.random().toString(36).substring(2, 15);
     const newComment = {
       ...comment,
       id: `comment-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
-      likes: 0
+      likes: 0,
+      secretToken
     };
     const updatedComments = [newComment, ...comments];
     localStorage.setItem('falkiya_comments', JSON.stringify(updatedComments));
@@ -214,8 +223,11 @@ export const databaseService = {
   },
 
   // Like a comment
-  likeComment: (commentId) => {
-    const comments = databaseService.getComments();
+  likeComment: async (commentId, currentLikes = 0) => {
+    if (firebaseService.isActive()) {
+      return await firebaseService.likeComment(commentId, currentLikes);
+    }
+    const comments = await databaseService.getComments();
     const updatedComments = comments.map(c => {
       if (c.id === commentId) {
         return { ...c, likes: (c.likes || 0) + 1 };
@@ -224,6 +236,33 @@ export const databaseService = {
     });
     localStorage.setItem('falkiya_comments', JSON.stringify(updatedComments));
     return updatedComments.find(c => c.id === commentId);
+  },
+
+  // Update a comment
+  updateComment: async (commentId, updatedData, token) => {
+    if (firebaseService.isActive()) {
+      return await firebaseService.updateComment(commentId, updatedData, token);
+    }
+    const comments = await databaseService.getComments();
+    const updatedComments = comments.map(c => {
+      if (c.id === commentId) {
+        return { ...c, ...updatedData };
+      }
+      return c;
+    });
+    localStorage.setItem('falkiya_comments', JSON.stringify(updatedComments));
+    return updatedComments.find(c => c.id === commentId);
+  },
+
+  // Delete a comment
+  deleteComment: async (commentId, token) => {
+    if (firebaseService.isActive()) {
+      return await firebaseService.deleteComment(commentId, token);
+    }
+    const comments = await databaseService.getComments();
+    const updatedComments = comments.filter(c => c.id !== commentId);
+    localStorage.setItem('falkiya_comments', JSON.stringify(updatedComments));
+    return true;
   },
 
   // Update an existing project
