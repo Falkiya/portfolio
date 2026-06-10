@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Briefcase, GraduationCap, Award, Calendar, BookOpen, ExternalLink, ShieldCheck, Pencil } from 'lucide-react';
 
-export default function Experience({ workExperience = [], educationCredentials = {}, onOpenEditModal }) {
+export default function Experience({ workExperience = [], educationCredentials = {}, onOpenEditModal, isAdmin = false }) {
   const [activeTab, setActiveTab] = useState('work');
 
   const educationAndCertifications = {
@@ -18,24 +18,26 @@ export default function Experience({ workExperience = [], educationCredentials =
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <h2 style={{ fontSize: '2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             <span className="text-gradient">Journey &amp; Credentials</span>
-            <button 
-              onClick={() => onOpenEditModal(activeTab === 'work' ? 'work' : 'edu')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.25rem',
-                transition: 'var(--transition-smooth)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-              title="Edit Journey & Credentials"
-            >
-              <Pencil size={18} />
-            </button>
+            {isAdmin && (
+              <button 
+                onClick={() => onOpenEditModal(activeTab === 'work' ? 'work' : 'edu')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '0.25rem',
+                  transition: 'var(--transition-smooth)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                title="Edit Journey & Credentials"
+              >
+                <Pencil size={18} />
+              </button>
+            )}
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
             A timeline of my professional engagements, academic record, certifications, and leadership roles.
@@ -139,24 +141,26 @@ export default function Experience({ workExperience = [], educationCredentials =
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.3rem', marginBottom: '1.25rem' }} className="text-gradient">
                   <BookOpen size={20} /> 
                   <span>Academic History</span>
-                  <button 
-                    onClick={() => onOpenEditModal('edu')}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-muted)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '0.25rem',
-                      transition: 'var(--transition-smooth)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                    title="Edit Academics"
-                  >
-                    <Pencil size={15} />
-                  </button>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => onOpenEditModal('edu')}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '0.25rem',
+                        transition: 'var(--transition-smooth)'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                      title="Edit Academics"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  )}
                 </h3>
                 {educationAndCertifications.education.map((edu, idx) => (
                   <div key={idx} className="glass-card" style={{ borderLeft: '3px solid var(--accent-cyan)' }}>
@@ -175,24 +179,26 @@ export default function Experience({ workExperience = [], educationCredentials =
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.3rem', marginBottom: '1.25rem' }} className="text-gradient">
                   <Award size={20} /> 
                   <span>Awards &amp; Accomplishments</span>
-                  <button 
-                    onClick={() => onOpenEditModal('ach')}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-muted)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '0.25rem',
-                      transition: 'var(--transition-smooth)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                    title="Edit Achievements"
-                  >
-                    <Pencil size={15} />
-                  </button>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => onOpenEditModal('ach')}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '0.25rem',
+                        transition: 'var(--transition-smooth)'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                      title="Edit Achievements"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  )}
                 </h3>
                 <div className="grid-cols-2">
                   {educationAndCertifications.achievements.map((ach, idx) => (
@@ -212,24 +218,26 @@ export default function Experience({ workExperience = [], educationCredentials =
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.3rem', marginBottom: '1.25rem' }} className="text-gradient">
                   <ShieldCheck size={20} /> 
                   <span>Verified Certifications</span>
-                  <button 
-                    onClick={() => onOpenEditModal('certs')}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-muted)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '0.25rem',
-                      transition: 'var(--transition-smooth)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                    title="Edit Certifications"
-                  >
-                    <Pencil size={15} />
-                  </button>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => onOpenEditModal('certs')}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '0.25rem',
+                        transition: 'var(--transition-smooth)'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                      title="Edit Certifications"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  )}
                 </h3>
                 <div style={{
                   background: 'var(--glass-bg)',

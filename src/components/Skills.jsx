@@ -54,7 +54,7 @@ function getCategoryBullets(index) {
   ];
 }
 
-export default function Skills({ skillsData = [], onOpenEditModal }) {
+export default function Skills({ skillsData = [], onOpenEditModal, isAdmin = false }) {
   const [flippedCards, setFlippedCards] = useState({});
 
   const toggleFlip = (index) => {
@@ -72,24 +72,26 @@ export default function Skills({ skillsData = [], onOpenEditModal }) {
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <h2 style={{ fontSize: '2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             <span className="text-gradient">Technical Competencies</span>
-            <button 
-              onClick={onOpenEditModal}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.25rem',
-                transition: 'var(--transition-smooth)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-              title="Edit Skills List"
-            >
-              <Pencil size={18} />
-            </button>
+            {isAdmin && (
+              <button 
+                onClick={onOpenEditModal}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '0.25rem',
+                  transition: 'var(--transition-smooth)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                title="Edit Skills List"
+              >
+                <Pencil size={18} />
+              </button>
+            )}
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
             A comprehensive suite of tools, frameworks, and methodologies I leverage to design, build, and deploy production-ready AI systems. Click on any card to flip it and view practical applications.

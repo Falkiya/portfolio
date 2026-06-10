@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Terminal, Mail, Phone, MapPin, Download, CheckCircle, Pencil, User } from 'lucide-react';
 
-export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile }) {
+export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile, isAdmin = false }) {
   const titles = aboutDetails.roles || [
     'AI Engineer',
     'RAG Applications Developer',
@@ -107,25 +107,27 @@ export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile
               flexWrap: 'wrap'
             }}>
               {aboutDetails.name || 'FALKIYA AFREEN'}
-              <button 
-                onClick={onOpenEditModal}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--text-muted)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  marginLeft: '1rem',
-                  padding: '0.25rem',
-                  transition: 'var(--transition-smooth)'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                title="Edit Profile Details"
-              >
-                <Pencil size={18} />
-              </button>
+              {isAdmin && (
+                <button 
+                  onClick={onOpenEditModal}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginLeft: '1rem',
+                    padding: '0.25rem',
+                    transition: 'var(--transition-smooth)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                  title="Edit Profile Details"
+                >
+                  <Pencil size={18} />
+                </button>
+              )}
             </h1>
             
             <div style={{ 
@@ -201,8 +203,9 @@ export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
               <div style={{
                 position: 'relative',
-                width: '360px',
-                height: '500px',
+                width: '100%',
+                maxWidth: '340px',
+                aspectRatio: '340/460',
                 borderRadius: '16px',
                 background: 'var(--bg-secondary)',
                 border: '3px solid var(--accent-cyan)',
@@ -236,59 +239,63 @@ export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile
                 )}
                 
                 {/* Upload Overlay */}
-                <label 
-                  htmlFor="hero-profile-photo-upload"
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    color: '#ffffff',
-                    fontSize: '0.75rem',
-                    padding: '0.6rem',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'var(--transition-smooth)',
-                    opacity: aboutDetails.profilePhoto ? 0 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem'
-                  }}
-                  className="photo-upload-overlay"
-                >
-                  <Pencil size={12} />
-                  <span>{aboutDetails.profilePhoto ? 'Change Photo' : 'Upload Photo'}</span>
-                </label>
-                <input 
-                  type="file"
-                  id="hero-profile-photo-upload"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      // Keep file sizes reasonable for LocalStorage limits
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert('Image is too large. Please select an image under 2MB.');
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const updated = { 
-                          ...aboutDetails, 
-                          profilePhoto: reader.result,
-                          profilePhotoZoom: 100,
-                          profilePhotoX: 50,
-                          profilePhotoY: 50
-                        };
-                        onSaveProfile(updated);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  style={{ display: 'none' }}
-                />
+                {isAdmin && (
+                  <>
+                    <label 
+                      htmlFor="hero-profile-photo-upload"
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: 'rgba(0,0,0,0.7)',
+                        color: '#ffffff',
+                        fontSize: '0.75rem',
+                        padding: '0.6rem',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'var(--transition-smooth)',
+                        opacity: aboutDetails.profilePhoto ? 0 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.3rem'
+                      }}
+                      className="photo-upload-overlay"
+                    >
+                      <Pencil size={12} />
+                      <span>{aboutDetails.profilePhoto ? 'Change Photo' : 'Upload Photo'}</span>
+                    </label>
+                    <input 
+                      type="file"
+                      id="hero-profile-photo-upload"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // Keep file sizes reasonable for LocalStorage limits
+                          if (file.size > 2 * 1024 * 1024) {
+                            alert('Image is too large. Please select an image under 2MB.');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const updated = { 
+                              ...aboutDetails, 
+                              profilePhoto: reader.result,
+                              profilePhotoZoom: 100,
+                              profilePhotoX: 50,
+                              profilePhotoY: 50
+                            };
+                            onSaveProfile(updated);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </>
+                )}
               </div>
               
               <style>{`

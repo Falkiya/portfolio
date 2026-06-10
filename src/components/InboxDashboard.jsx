@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Lock, Unlock, Mail, Clock, Send, MessageSquare, Bot, Globe, Activity, Eye, Compass } from 'lucide-react';
 import { databaseService } from '../services/databaseService';
 
-export default function InboxDashboard({ isOpen, onClose }) {
+export default function InboxDashboard({ isOpen, onClose, onAdminLogin, onAdminLogout }) {
   const [passcode, setPasscode] = useState('');
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(() => localStorage.getItem('falkiya_admin_logged') === 'true');
   const [errorMsg, setErrorMsg] = useState('');
   const [threads, setThreads] = useState([]);
   const [activeThreadId, setActiveThreadId] = useState(null);
@@ -35,10 +35,15 @@ export default function InboxDashboard({ isOpen, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeThreadId, threads]);
 
-  // Auto-lock dashboard when closed
   useEffect(() => {
-    if (!isOpen) {
-      setIsUnlocked(false);
+    if (isOpen) {
+      const adminLogged = localStorage.getItem('falkiya_admin_logged') === 'true';
+      setIsUnlocked(adminLogged);
+      if (adminLogged) {
+        setThreads(databaseService.getChatThreads());
+        setVisits(databaseService.getVisitorStats());
+      }
+    } else {
       setPasscode('');
     }
   }, [isOpen]);
@@ -48,11 +53,20 @@ export default function InboxDashboard({ isOpen, onClose }) {
     if (passcode.toLowerCase() === 'admin') {
       setIsUnlocked(true);
       setErrorMsg('');
+      localStorage.setItem('falkiya_admin_logged', 'true');
+      if (onAdminLogin) onAdminLogin();
       setThreads(databaseService.getChatThreads());
       setVisits(databaseService.getVisitorStats());
     } else {
       setErrorMsg('Incorrect passcode.');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('falkiya_admin_logged');
+    setIsUnlocked(false);
+    if (onAdminLogout) onAdminLogout();
+    onClose();
   };
 
   const handleSendReply = (e) => {
@@ -106,9 +120,30 @@ export default function InboxDashboard({ isOpen, onClose }) {
           background: 'var(--bg-secondary)',
           gap: '1rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', flexWrap: 'wrap' }}>
             <Unlock size={18} className="text-gradient" />
             <span>Falkiya's Dashboard</span>
+            {isUnlocked && (
+              <button 
+                onClick={handleLogout}
+                style={{
+                  marginLeft: '0.75rem',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '4px',
+                  fontSize: '0.7rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  transition: 'var(--transition-smooth)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+              >
+                Logout Admin
+              </button>
+            )}
           </div>
 
           {isUnlocked && (

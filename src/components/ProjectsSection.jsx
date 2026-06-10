@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Filter, ExternalLink, Calendar, User, Code, Plus, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import TiltCard from './TiltCard';
 
-export default function ProjectsSection({ projects, onOpenUploadPortal, onEditProject, onDeleteProject, onOpenDetailsModal }) {
+export default function ProjectsSection({ projects, onOpenUploadPortal, onEditProject, onDeleteProject, onOpenDetailsModal, isAdmin = false }) {
   const [activeFilter, setActiveFilter] = useState('All');
 
   const categories = ['All', 'AI SaaS', 'NLP', 'Web Development'];
@@ -34,20 +34,22 @@ export default function ProjectsSection({ projects, onOpenUploadPortal, onEditPr
           </div>
           
           {/* Admin Upload Trigger Button */}
-          <button 
-            onClick={onOpenUploadPortal}
-            className="btn btn-secondary"
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              fontSize: '0.85rem',
-              borderColor: 'var(--accent-purple)'
-            }}
-          >
-            <Plus size={14} className="text-gradient" />
-            <span>Upload Project</span>
-          </button>
+          {isAdmin && (
+            <button 
+              onClick={onOpenUploadPortal}
+              className="btn btn-secondary"
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                fontSize: '0.85rem',
+                borderColor: 'var(--accent-purple)'
+              }}
+            >
+              <Plus size={14} className="text-gradient" />
+              <span>Upload Project</span>
+            </button>
+          )}
         </div>
 
         {/* Filter Navigation */}
@@ -229,47 +231,51 @@ export default function ProjectsSection({ projects, onOpenUploadPortal, onEditPr
 
                     {/* Admin Actions + Link (Right) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                      {/* Edit button */}
-                      <button
-                        onClick={() => onEditProject(project)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: 'var(--text-muted)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          transition: 'var(--transition-smooth)'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                        title="Edit Project"
-                      >
-                        <Pencil size={14} />
-                      </button>
+                      {isAdmin && (
+                        <>
+                          {/* Edit button */}
+                          <button
+                            onClick={() => onEditProject(project)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--text-muted)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                            title="Edit Project"
+                          >
+                            <Pencil size={14} />
+                          </button>
 
-                      {/* Delete button */}
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete "${project.title}"?`)) {
-                            onDeleteProject(project.id);
-                          }
-                        }}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: 'var(--text-muted)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          transition: 'var(--transition-smooth)'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-                        title="Delete Project"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                          {/* Delete button */}
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to delete "${project.title}"?`)) {
+                                onDeleteProject(project.id);
+                              }
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--text-muted)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                            title="Delete Project"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
 
                       {/* Explore link */}
                       <a 

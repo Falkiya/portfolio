@@ -43,6 +43,7 @@ export default function App() {
   const [educationCredentials, setEducationCredentials] = useState({});
   const [isEditExperienceOpen, setIsEditExperienceOpen] = useState(false);
   const [experienceEditSubTab, setExperienceEditSubTab] = useState('work');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Initialize data and theme
   useEffect(() => {
@@ -63,6 +64,10 @@ export default function App() {
     // Load experience
     setExperienceData(databaseService.getExperience());
     setEducationCredentials(databaseService.getEducationCredentials());
+
+    // Load Admin Logged state
+    const adminLogged = localStorage.getItem('falkiya_admin_logged') === 'true';
+    setIsAdmin(adminLogged);
 
     // Geo-lookup visitor tracking
     const trackVisitor = async () => {
@@ -113,6 +118,14 @@ export default function App() {
   const handleOpenExperienceEdit = (subTab = 'work') => {
     setExperienceEditSubTab(subTab);
     setIsEditExperienceOpen(true);
+  };
+
+  const handleAdminLogin = () => {
+    setIsAdmin(true);
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
   };
 
   const handleAboutDetailsSaved = (updatedDetails) => {
@@ -166,16 +179,18 @@ export default function App() {
             aboutDetails={aboutDetails} 
             onOpenEditModal={() => setIsEditProfileOpen(true)} 
             onSaveProfile={handleAboutDetailsSaved} 
+            isAdmin={isAdmin}
           />
         </Reveal>
         <Reveal effect="slide-up">
-          <Skills skillsData={skillsData} onOpenEditModal={() => setIsEditSkillsOpen(true)} />
+          <Skills skillsData={skillsData} onOpenEditModal={() => setIsEditSkillsOpen(true)} isAdmin={isAdmin} />
         </Reveal>
         <Reveal effect="slide-up">
           <Experience 
             workExperience={experienceData} 
             educationCredentials={educationCredentials} 
             onOpenEditModal={handleOpenExperienceEdit} 
+            isAdmin={isAdmin}
           />
         </Reveal>
         
@@ -187,6 +202,7 @@ export default function App() {
             onEditProject={handleEditProjectClick}
             onDeleteProject={handleProjectDeleted}
             onOpenDetailsModal={(project) => setActiveDetailProject(project)}
+            isAdmin={isAdmin}
           />
         </Reveal>
         
@@ -356,6 +372,8 @@ export default function App() {
       <InboxDashboard 
         isOpen={isInboxDashboardOpen}
         onClose={() => setIsInboxDashboardOpen(false)}
+        onAdminLogin={handleAdminLogin}
+        onAdminLogout={handleAdminLogout}
       />
 
       {/* Profile Details Edit Modal */}
