@@ -1,7 +1,7 @@
 // Firebase Firestore REST API Client for Comments Section
 // Lightweight, zero-dependency implementation using native fetch
 
-const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'website-db-499023';
 
 // Helper to map Firestore document format to clean JS object
 function mapFirestoreDoc(doc) {
