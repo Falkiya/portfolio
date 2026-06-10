@@ -18,8 +18,8 @@ export default function ContactSection() {
 
     setLoading(true);
 
-    // Formspree submission mock (User can swap endpoint with their real Formspree endpoint)
-    fetch('https://formspree.io/f/moqgkebp', {
+    // Formspree submission
+    fetch('https://formspree.io/f/xwvjnvwy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
