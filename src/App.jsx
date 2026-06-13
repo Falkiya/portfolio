@@ -209,7 +209,7 @@ export default function App() {
     <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
       {/* Dynamic Starry Galaxy Background */}
-      <GalaxyBackground />
+      <GalaxyBackground theme={theme} />
       
       {/* Dynamic Header */}
       <Header theme={theme} toggleTheme={toggleTheme} />

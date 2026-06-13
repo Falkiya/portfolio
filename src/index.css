@@ -54,12 +54,21 @@
   padding: 0;
 }
 
+html {
+  background-color: #020306;
+  transition: background-color 0.3s ease;
+}
+
+html[data-theme="light"] {
+  background-color: #e0f2fe;
+}
+
 body {
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--text-primary);
   font-family: var(--font-sans);
   line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: color 0.3s ease;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
