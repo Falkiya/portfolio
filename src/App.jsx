@@ -17,6 +17,7 @@ import { databaseService } from './services/databaseService';
 import { Mail, Terminal, Heart, Lock } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from './components/BrandIcons';
 import Reveal from './components/Reveal';
+import GalaxyBackground from './components/GalaxyBackground';
 
 export default function App() {
   const [theme, setTheme] = useState('dark');
@@ -206,6 +207,9 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Dynamic Starry Galaxy Background */}
+      <GalaxyBackground />
       
       {/* Dynamic Header */}
       <Header theme={theme} toggleTheme={toggleTheme} />
