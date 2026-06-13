@@ -40,7 +40,7 @@ export default function EditProfileModal({ isOpen, onClose, aboutDetails, onSave
       summary,
       location,
       email,
-      phone: '',
+      phone,
       profilePhoto: '',
       profilePhotoZoom: 100,
       profilePhotoX: 50,
@@ -153,6 +153,17 @@ export default function EditProfileModal({ isOpen, onClose, aboutDetails, onSave
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@email.com"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. +91 98765 43210"
                 />
               </div>
 
