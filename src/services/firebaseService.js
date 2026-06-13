@@ -19,6 +19,31 @@ function mapFirestoreDoc(doc) {
   };
 }
 
+// Helper to map Firestore document format to clean Profile details object
+function mapProfileDoc(doc) {
+  const fields = doc.fields || {};
+  const rolesArray = fields.roles?.arrayValue?.values || [];
+  const roles = rolesArray.map(v => v.stringValue || '');
+  
+  return {
+    name: fields.name?.stringValue || '',
+    summary: fields.summary?.stringValue || '',
+    location: fields.location?.stringValue || '',
+    email: fields.email?.stringValue || '',
+    phone: fields.phone?.stringValue || '',
+    profilePhoto: fields.profilePhoto?.stringValue || '',
+    profilePhotoZoom: parseInt(fields.profilePhotoZoom?.integerValue || '100', 10),
+    profilePhotoX: parseInt(fields.profilePhotoX?.integerValue || '50', 10),
+    profilePhotoY: parseInt(fields.profilePhotoY?.integerValue || '50', 10),
+    roles: roles.length > 0 ? roles : [
+      "AI Engineer",
+      "RAG Applications Developer",
+      "Freelance AI SaaS Builder",
+      "Prompt Architect"
+    ]
+  };
+}
+
 export const firebaseService = {
   isActive: () => {
     return !!projectId;
@@ -166,6 +191,69 @@ export const firebaseService = {
       return mapFirestoreDoc(updatedDoc);
     } catch (error) {
       console.error('Error liking comment in Firestore:', error);
+      throw error;
+    }
+  },
+
+  getProfileDetails: async () => {
+    if (!projectId) return null;
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/profile/about`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) return null; // Doesn't exist yet
+        throw new Error(`Firestore error: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return mapProfileDoc(data);
+    } catch (error) {
+      console.error('Error fetching profile from Firestore:', error);
+      return null;
+    }
+  },
+
+  updateProfileDetails: async (details) => {
+    if (!projectId) throw new Error('Firebase Project ID is not configured');
+    
+    const rolesValues = (details.roles || []).map(role => ({ stringValue: role }));
+    
+    const docData = {
+      fields: {
+        name: { stringValue: details.name || '' },
+        summary: { stringValue: details.summary || '' },
+        location: { stringValue: details.location || '' },
+        email: { stringValue: details.email || '' },
+        phone: { stringValue: details.phone || '' },
+        profilePhoto: { stringValue: details.profilePhoto || '' },
+        profilePhotoZoom: { integerValue: String(details.profilePhotoZoom || 100) },
+        profilePhotoX: { integerValue: String(details.profilePhotoX !== undefined ? details.profilePhotoX : 50) },
+        profilePhotoY: { integerValue: String(details.profilePhotoY !== undefined ? details.profilePhotoY : 50) },
+        roles: {
+          arrayValue: {
+            values: rolesValues
+          }
+        }
+      }
+    };
+
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/profile/about?updateMask.fieldPaths=name&updateMask.fieldPaths=summary&updateMask.fieldPaths=location&updateMask.fieldPaths=email&updateMask.fieldPaths=phone&updateMask.fieldPaths=profilePhoto&updateMask.fieldPaths=profilePhotoZoom&updateMask.fieldPaths=profilePhotoX&updateMask.fieldPaths=profilePhotoY&updateMask.fieldPaths=roles`;
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(docData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Firestore error: ${response.statusText}`);
+      }
+
+      const updatedDoc = await response.json();
+      return mapProfileDoc(updatedDoc);
+    } catch (error) {
+      console.error('Error updating profile in Firestore:', error);
       throw error;
     }
   }

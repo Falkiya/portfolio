@@ -8,13 +8,12 @@ import AdminUploadPortal from './components/AdminUploadPortal';
 import ProjectDetailsModal from './components/ProjectDetailsModal';
 import CommentsSection from './components/CommentsSection';
 import ContactSection from './components/ContactSection';
-import InboxDashboard from './components/InboxDashboard';
 import AiAssistant from './components/AiAssistant';
 import EditProfileModal from './components/EditProfileModal';
 import EditSkillsModal from './components/EditSkillsModal';
 import EditExperienceModal from './components/EditExperienceModal';
 import { databaseService } from './services/databaseService';
-import { Mail, Terminal, Heart, Lock } from 'lucide-react';
+import { Mail, Terminal, Heart } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from './components/BrandIcons';
 import Reveal from './components/Reveal';
 
@@ -26,9 +25,6 @@ export default function App() {
   
   // Details Modal States
   const [activeDetailProject, setActiveDetailProject] = useState(null);
-
-  // Admin Inbox Dashboard States
-  const [isInboxDashboardOpen, setIsInboxDashboardOpen] = useState(false);
 
   // About Details States
   const [aboutDetails, setAboutDetails] = useState({});
@@ -56,7 +52,11 @@ export default function App() {
     setProjects(databaseService.getProjects());
 
     // Load about details
-    setAboutDetails(databaseService.getAboutDetails());
+    const loadAboutDetails = async () => {
+      const details = await databaseService.getAboutDetails();
+      setAboutDetails(details);
+    };
+    loadAboutDetails();
 
     // Load skills
     setSkillsData(databaseService.getSkills());
@@ -69,41 +69,19 @@ export default function App() {
     const adminLogged = localStorage.getItem('falkiya_admin_logged') === 'true';
     setIsAdmin(adminLogged);
 
-    // Geo-lookup visitor tracking
-    const trackVisitor = async () => {
-      if (sessionStorage.getItem('falkiya_visit_logged')) return;
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        if (response.ok) {
-          const data = await response.json();
-          const maskedIp = data.ip ? data.ip.split('.').slice(0, 2).join('.') + '.xx.xx' : 'Unknown';
-          const ua = navigator.userAgent;
-          let device = 'Windows Desktop';
-          if (/iPhone|iPad|iPod/i.test(ua)) device = 'Safari on iOS Mobile';
-          else if (/Android/i.test(ua)) device = 'Chrome on Android Mobile';
-          else if (/Macintosh/i.test(ua)) device = 'Safari on macOS Desktop';
-          else if (/Linux/i.test(ua)) device = 'Firefox on Linux Desktop';
-          
-          const newVisit = {
-            id: `visit-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            ip: maskedIp,
-            location: `${data.city || 'Unknown City'}, ${data.region || 'Unknown Region'}, ${data.country_name || 'Unknown Country'}`,
-            device: device,
-            isp: data.org || 'Unknown Provider',
-            type: 'real',
-            company: ''
-          };
-          
-          databaseService.logVisit(newVisit);
-          sessionStorage.setItem('falkiya_visit_logged', 'true');
-        }
-      } catch (err) {
-        console.error('Visitor tracking lookup failed:', err);
-      }
-    };
-
-    trackVisitor();
+    // Parse URL parameters for admin login/logout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === 'true') {
+      setIsAdmin(true);
+      localStorage.setItem('falkiya_admin_logged', 'true');
+      alert('Admin Mode Enabled');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('logout') === 'true' || urlParams.get('admin') === 'false') {
+      setIsAdmin(false);
+      localStorage.setItem('falkiya_admin_logged', 'false');
+      alert('Admin Mode Disabled');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   const handleSkillsSaved = (updatedSkills) => {
@@ -128,9 +106,29 @@ export default function App() {
     setIsAdmin(false);
   };
 
-  const handleAboutDetailsSaved = (updatedDetails) => {
-    databaseService.updateAboutDetails(updatedDetails);
-    setAboutDetails(databaseService.getAboutDetails());
+  // Keyboard shortcut listener to toggle admin mode: Ctrl + Shift + A
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setIsAdmin((prev) => {
+          const nextState = !prev;
+          localStorage.setItem('falkiya_admin_logged', String(nextState));
+          alert(`Admin Mode ${nextState ? 'Enabled' : 'Disabled'}`);
+          return nextState;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleAboutDetailsSaved = async (updatedDetails) => {
+    const saved = await databaseService.updateAboutDetails(updatedDetails);
+    setAboutDetails(saved);
   };
 
   const toggleTheme = () => {
@@ -248,25 +246,6 @@ export default function App() {
 
             {/* Social icons */}
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              
-              {/* Special Owner Inbox Button */}
-              <button 
-                onClick={() => setIsInboxDashboardOpen(true)}
-                className="btn-secondary" 
-                style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: '0.4rem', 
-                  fontSize: '0.75rem', 
-                  padding: '0.35rem 0.75rem', 
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  borderColor: 'var(--accent-purple)'
-                }}
-              >
-                <Lock size={12} className="text-gradient" />
-                <span>Owner Inbox</span>
-              </button>
 
               <a 
                 href="https://github.com/Falkiya/skills-copilot-codespaces-vscode" 
@@ -366,14 +345,6 @@ export default function App() {
         project={activeDetailProject}
         isOpen={activeDetailProject !== null}
         onClose={() => setActiveDetailProject(null)}
-      />
-
-      {/* Owner Inbox Admin Dashboard Modal */}
-      <InboxDashboard 
-        isOpen={isInboxDashboardOpen}
-        onClose={() => setIsInboxDashboardOpen(false)}
-        onAdminLogin={handleAdminLogin}
-        onAdminLogout={handleAdminLogout}
       />
 
       {/* Profile Details Edit Modal */}

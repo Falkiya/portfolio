@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Terminal, Mail, Phone, MapPin, Download, CheckCircle, Pencil, User } from 'lucide-react';
+import { Sparkles, Terminal, Mail, Phone, MapPin, Download, CheckCircle, Pencil } from 'lucide-react';
 
 export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile, isAdmin = false }) {
   const titles = aboutDetails.roles || [
@@ -76,7 +76,7 @@ export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile
       }} />
 
       <div className="container" style={{ position: 'relative', zIndex: 10 }}>
-        <div className="grid-cols-2" style={{ alignItems: 'center', gap: '3rem' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           
           {/* Hero Content Left */}
           <div>
@@ -197,115 +197,6 @@ export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile
               </a>
             </div>
           </div>
-
-          {/* Profile Photo Upload Panel Right */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                maxWidth: '340px',
-                aspectRatio: '340/460',
-                borderRadius: '16px',
-                background: 'var(--bg-secondary)',
-                border: '3px solid var(--accent-cyan)',
-                boxShadow: '0 0 25px var(--accent-cyan-glow)',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'var(--transition-smooth)'
-              }}
-              className="profile-photo-container"
-              >
-                {aboutDetails.profilePhoto ? (
-                  <img 
-                    src={aboutDetails.profilePhoto} 
-                    alt="Falkiya Afreen" 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'cover',
-                      transform: `scale(${aboutDetails.profilePhotoZoom / 100 || 1})`,
-                      objectPosition: `${aboutDetails.profilePhotoX !== undefined ? aboutDetails.profilePhotoX : 50}% ${aboutDetails.profilePhotoY !== undefined ? aboutDetails.profilePhotoY : 50}%`,
-                      transition: 'transform 0.1s ease'
-                    }}
-                  />
-                ) : (
-                  <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                    <User size={72} style={{ opacity: 0.4 }} className="text-gradient" />
-                    <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>No Profile Photo</span>
-                  </div>
-                )}
-                
-                {/* Upload Overlay */}
-                {isAdmin && (
-                  <>
-                    <label 
-                      htmlFor="hero-profile-photo-upload"
-                      style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        background: 'rgba(0,0,0,0.7)',
-                        color: '#ffffff',
-                        fontSize: '0.75rem',
-                        padding: '0.6rem',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'var(--transition-smooth)',
-                        opacity: aboutDetails.profilePhoto ? 0 : 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.3rem'
-                      }}
-                      className="photo-upload-overlay"
-                    >
-                      <Pencil size={12} />
-                      <span>{aboutDetails.profilePhoto ? 'Change Photo' : 'Upload Photo'}</span>
-                    </label>
-                    <input 
-                      type="file"
-                      id="hero-profile-photo-upload"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          // Keep file sizes reasonable for LocalStorage limits
-                          if (file.size > 2 * 1024 * 1024) {
-                            alert('Image is too large. Please select an image under 2MB.');
-                            return;
-                          }
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            const updated = { 
-                              ...aboutDetails, 
-                              profilePhoto: reader.result,
-                              profilePhotoZoom: 100,
-                              profilePhotoX: 50,
-                              profilePhotoY: 50
-                            };
-                            onSaveProfile(updated);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      style={{ display: 'none' }}
-                    />
-                  </>
-                )}
-              </div>
-              
-              <style>{`
-                .profile-photo-container:hover .photo-upload-overlay {
-                  opacity: 1 !important;
-                }
-              `}</style>
-            </div>
-          </div>
-
         </div>
       </div>
     </section>

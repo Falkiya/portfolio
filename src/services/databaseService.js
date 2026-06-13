@@ -1,4 +1,3 @@
-import defaultProfilePhoto from '../assets/profile.jpg';
 import { firebaseService } from './firebaseService';
 
 // Pluggable Database Service
@@ -15,7 +14,7 @@ const DEFAULT_ABOUT = {
   location: "Mysuru, Karnataka",
   email: "falkiyafreen23@gmail.com",
   phone: "",
-  profilePhoto: defaultProfilePhoto,
+  profilePhoto: "",
   profilePhotoZoom: 100,
   profilePhotoX: 50,
   profilePhotoY: 50,
@@ -154,8 +153,6 @@ const DEFAULT_EDUCATION_CREDENTIALS = {
     }
   ]
 };
-
-const DEFAULT_VISITORS = [];
 
 export const databaseService = {
   // Get all projects
@@ -316,64 +313,18 @@ export const databaseService = {
     return newComment;
   },
 
-  // Get all direct message threads
-  getChatThreads: () => {
-    const threads = localStorage.getItem('falkiya_chat_threads');
-    return threads ? JSON.parse(threads) : [];
-  },
-
-  // Send a message inside a direct chat thread (creates thread if threadId doesn't exist)
-  sendChatMessage: (threadId, sender, senderName, senderEmail, text) => {
-    const threads = databaseService.getChatThreads();
-    const timestamp = new Date().toISOString();
-    
-    let thread = threads.find(t => t.id === threadId);
-    if (!thread) {
-      thread = {
-        id: threadId || `thread-${Date.now()}`,
-        clientName: senderName || 'Client Visitor',
-        clientEmail: senderEmail || '',
-        lastUpdated: timestamp,
-        messages: []
-      };
-      threads.push(thread);
-    }
-    
-    const newMessage = {
-      id: `msg-${Date.now()}`,
-      sender, // 'client' or 'admin'
-      text,
-      timestamp
-    };
-    
-    thread.messages.push(newMessage);
-    thread.lastUpdated = timestamp;
-    
-    // Update thread identity details if message is from client
-    if (sender === 'client') {
-      if (senderName) thread.clientName = senderName;
-      if (senderEmail) thread.clientEmail = senderEmail;
-    }
-    
-    localStorage.setItem('falkiya_chat_threads', JSON.stringify(threads));
-    return thread;
-  },
-
   // Get profile about details
-  getAboutDetails: () => {
+  getAboutDetails: async () => {
+    if (firebaseService.isActive()) {
+      const dbDetails = await firebaseService.getProfileDetails();
+      if (dbDetails) return dbDetails;
+    }
     const details = localStorage.getItem('falkiya_about_details');
     if (!details) {
       localStorage.setItem('falkiya_about_details', JSON.stringify(DEFAULT_ABOUT));
       return DEFAULT_ABOUT;
     }
     const parsed = JSON.parse(details);
-    if (!parsed.profilePhoto) {
-      parsed.profilePhoto = defaultProfilePhoto;
-      parsed.profilePhotoZoom = 100;
-      parsed.profilePhotoX = 50;
-      parsed.profilePhotoY = 50;
-      localStorage.setItem('falkiya_about_details', JSON.stringify(parsed));
-    }
     if (parsed.summary && parsed.summary.includes("BCA student (CGPA 8.5")) {
       parsed.summary = DEFAULT_ABOUT.summary;
       localStorage.setItem('falkiya_about_details', JSON.stringify(parsed));
@@ -386,7 +337,10 @@ export const databaseService = {
   },
 
   // Update profile about details
-  updateAboutDetails: (updatedDetails) => {
+  updateAboutDetails: async (updatedDetails) => {
+    if (firebaseService.isActive()) {
+      return await firebaseService.updateProfileDetails(updatedDetails);
+    }
     localStorage.setItem('falkiya_about_details', JSON.stringify(updatedDetails));
     return updatedDetails;
   },
@@ -437,28 +391,5 @@ export const databaseService = {
   updateEducationCredentials: (updatedCredentials) => {
     localStorage.setItem('falkiya_education_credentials', JSON.stringify(updatedCredentials));
     return updatedCredentials;
-  },
-
-  // Get visitor stats
-  getVisitorStats: () => {
-    let list = localStorage.getItem('falkiya_visitors');
-    // Clear out old mock visitor data from local storage if present
-    if (list && (list.includes('Redmond, Washington') || list.includes('visit-1') || list.includes('Microsoft Corporation'))) {
-      localStorage.removeItem('falkiya_visitors');
-      list = null;
-    }
-    if (!list) {
-      localStorage.setItem('falkiya_visitors', JSON.stringify(DEFAULT_VISITORS));
-      return DEFAULT_VISITORS;
-    }
-    return JSON.parse(list);
-  },
-
-  // Log a visitor visit
-  logVisit: (visit) => {
-    const list = databaseService.getVisitorStats();
-    const updated = [visit, ...list].slice(0, 100); // cap at 100 logs
-    localStorage.setItem('falkiya_visitors', JSON.stringify(updated));
-    return updated;
   }
 };
