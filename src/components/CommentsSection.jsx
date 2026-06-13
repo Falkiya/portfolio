@@ -73,8 +73,16 @@ export default function CommentsSection({ isAdmin = false }) {
   };
 
   const handleLike = async (comment) => {
+    const liked = JSON.parse(localStorage.getItem('falkiya_liked_comments') || '{}');
+    if (liked[comment.id]) return; // Block multiple likes from the same person
+
     try {
       await databaseService.likeComment(comment.id, comment.likes || 0);
+      
+      // Save this like in local storage to block future likes
+      liked[comment.id] = true;
+      localStorage.setItem('falkiya_liked_comments', JSON.stringify(liked));
+      
       await loadComments(); // Refresh list to get updated count
     } catch (err) {
       console.error('Error liking comment:', err);
@@ -139,6 +147,12 @@ export default function CommentsSection({ isAdmin = false }) {
   const isCommentOwner = (commentId) => {
     const owned = JSON.parse(localStorage.getItem('falkiya_owned_comments') || '{}');
     return !!owned[commentId];
+  };
+
+  // Check if current visitor has liked the comment
+  const isCommentLiked = (commentId) => {
+    const liked = JSON.parse(localStorage.getItem('falkiya_liked_comments') || '{}');
+    return !!liked[commentId];
   };
 
   // Compute averages
@@ -417,21 +431,26 @@ export default function CommentsSection({ isAdmin = false }) {
                       <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
                         <button 
                           onClick={() => handleLike(comment)}
+                          disabled={isCommentLiked(comment.id)}
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: 'var(--text-muted)',
-                            cursor: 'pointer',
+                            color: isCommentLiked(comment.id) ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                            cursor: isCommentLiked(comment.id) ? 'default' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.4rem',
                             fontSize: '0.8rem',
                             transition: 'var(--transition-smooth)'
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                          onMouseEnter={(e) => {
+                            if (!isCommentLiked(comment.id)) e.currentTarget.style.color = 'var(--accent-cyan)';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCommentLiked(comment.id)) e.currentTarget.style.color = 'var(--text-muted)';
+                          }}
                         >
-                          <ThumbsUp size={14} />
+                          <ThumbsUp size={14} fill={isCommentLiked(comment.id) ? 'var(--accent-cyan)' : 'transparent'} />
                           <span>Helpful ({comment.likes || 0})</span>
                         </button>
                       </div>
