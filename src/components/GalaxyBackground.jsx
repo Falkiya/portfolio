@@ -14,56 +14,47 @@ export default function GalaxyBackground() {
 
     // Star properties
     const stars = [];
-    const numStars = 150;
+    const numStars = 350; // Galaxy full of stars
     
-    // Nebula properties (galaxy gas clouds)
+    // Nebula properties (galaxy gas clouds for simple dark bg with neon effects)
     const nebulas = [
       { 
         x: width * 0.3, 
         y: height * 0.3, 
         radius: Math.min(width, height) * 0.5, 
-        color: 'rgba(6, 182, 212, 0.08)', // Cyan nebula
+        color: 'rgba(6, 182, 212, 0.04)', // Subtle cyan-neon dust
         angle: 0, 
-        speed: 0.00015 
+        speed: 0.00012 
       },
       { 
         x: width * 0.7, 
         y: height * 0.7, 
         radius: Math.min(width, height) * 0.6, 
-        color: 'rgba(139, 92, 246, 0.08)', // Purple nebula
+        color: 'rgba(139, 92, 246, 0.03)', // Subtle purple-neon dust
         angle: Math.PI, 
-        speed: -0.0001 
+        speed: -0.00008 
       },
       { 
         x: width * 0.5, 
         y: height * 0.5, 
         radius: Math.min(width, height) * 0.4, 
-        color: 'rgba(236, 72, 153, 0.04)', // Pink/Magenta nebula
+        color: 'rgba(56, 189, 248, 0.02)', // Subtle light-blue neon dust
         angle: Math.PI / 2, 
-        speed: 0.00008 
+        speed: 0.00006 
       }
     ];
 
-    // Create stars
+    // Create stars - all white-neon stars
     for (let i = 0; i < numStars; i++) {
-      const isCyan = i % 5 === 0;
-      const isPurple = i % 5 === 1;
-      const isGold = i % 5 === 2;
-      
-      let starColor = 'rgba(255, 255, 255, '; // White default
-      if (isCyan) starColor = 'rgba(6, 182, 212, ';
-      else if (isPurple) starColor = 'rgba(139, 92, 246, ';
-      else if (isGold) starColor = 'rgba(253, 224, 71, ';
-
       stars.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        size: Math.random() * 1.6 + 0.3,
-        alpha: Math.random() * 0.8 + 0.2,
-        twinkleSpeed: 0.003 + Math.random() * 0.012,
-        speedX: (Math.random() - 0.5) * 0.03,
-        speedY: (Math.random() - 0.5) * 0.03,
-        color: starColor
+        size: Math.random() * 1.5 + 0.2, // Variety of sizes
+        alpha: Math.random() * 0.85 + 0.15,
+        twinkleSpeed: 0.002 + Math.random() * 0.008, // Slow, elegant twinkling
+        speedX: (Math.random() - 0.5) * 0.025,
+        speedY: (Math.random() - 0.5) * 0.025,
+        color: 'rgba(255, 255, 255, ' // All white-neon
       });
     }
 
@@ -84,15 +75,15 @@ export default function GalaxyBackground() {
     let targetMouseY = 0;
 
     const handleMouseMove = (e) => {
-      targetMouseX = (e.clientX - width / 2) * 0.025;
-      targetMouseY = (e.clientY - height / 2) * 0.025;
+      targetMouseX = (e.clientX - width / 2) * 0.02;
+      targetMouseY = (e.clientY - height / 2) * 0.02;
     };
     window.addEventListener('mousemove', handleMouseMove);
 
     // Rendering animation loop
     const draw = () => {
       // Paint deep space background
-      ctx.fillStyle = '#030509'; 
+      ctx.fillStyle = '#020306'; // Very dark, simple background
       ctx.fillRect(0, 0, width, height);
 
       // Interpolate mouse movements for smooth drift
@@ -106,13 +97,13 @@ export default function GalaxyBackground() {
         // Revolving orbit paths to create infinite slow motion loops
         const cos = Math.cos(nebula.angle);
         const sin = Math.sin(nebula.angle);
-        const nebX = (width / 2) + cos * (width * 0.12) + mouseX * 0.4;
-        const nebY = (height / 2) + sin * (height * 0.12) + mouseY * 0.4;
+        const nebX = (width / 2) + cos * (width * 0.1) + mouseX * 0.3;
+        const nebY = (height / 2) + sin * (height * 0.1) + mouseY * 0.3;
 
         const gradient = ctx.createRadialGradient(nebX, nebY, 0, nebX, nebY, nebula.radius);
         gradient.addColorStop(0, nebula.color);
-        gradient.addColorStop(0.5, nebula.color.replace('0.08', '0.03').replace('0.04', '0.01'));
-        gradient.addColorStop(1, 'rgba(3, 5, 9, 0)');
+        gradient.addColorStop(0.5, nebula.color.replace('0.04', '0.015').replace('0.03', '0.01').replace('0.02', '0.005'));
+        gradient.addColorStop(1, 'rgba(2, 3, 6, 0)');
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -122,9 +113,9 @@ export default function GalaxyBackground() {
 
       // Draw and update stars
       stars.forEach((star) => {
-        // Star speed + mouse parallax shift (faster stars move more to create depth)
-        star.x += star.speedX + mouseX * (star.size * 0.08);
-        star.y += star.speedY + mouseY * (star.size * 0.08);
+        // Star speed + mouse parallax shift
+        star.x += star.speedX + mouseX * (star.size * 0.06);
+        star.y += star.speedY + mouseY * (star.size * 0.06);
 
         // Wrapping boundaries for infinite loop
         if (star.x < 0) star.x = width;
@@ -132,26 +123,35 @@ export default function GalaxyBackground() {
         if (star.y < 0) star.y = height;
         if (star.y > height) star.y = 0;
 
-        // Soft twinkling
+        // Twinkling
         star.alpha += star.twinkleSpeed;
         if (star.alpha > 1.0 || star.alpha < 0.15) {
           star.twinkleSpeed = -star.twinkleSpeed;
         }
 
-        // Draw star dot
-        ctx.fillStyle = star.color + Math.max(0.15, Math.min(1.0, star.alpha)) + ')';
+        const currentAlpha = Math.max(0.15, Math.min(1.0, star.alpha));
+
+        // Draw soft neon star glow halo first (performance optimized concentric bloom)
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + (currentAlpha * 0.1) + ')';
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.size * 3.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Add small glow highlights to prominent stars
-        if (star.size > 1.25) {
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = star.color.includes('6, 182') ? 'var(--accent-cyan)' : 'var(--accent-purple)';
+        // Add small neon shadow glow to brighter stars
+        if (star.size > 1.0) {
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+          ctx.fillStyle = star.color + currentAlpha + ')';
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 0.4, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
           ctx.fill();
-          ctx.shadowBlur = 0; // reset shadow state
+          ctx.shadowBlur = 0; // reset
+        } else {
+          // Standard star core
+          ctx.fillStyle = star.color + currentAlpha + ')';
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
         }
       });
 
