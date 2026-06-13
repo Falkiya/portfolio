@@ -14,6 +14,7 @@ const DEFAULT_ABOUT = {
   location: "Mysuru, Karnataka",
   email: "falkiyafreen23@gmail.com",
   phone: "",
+  linkedin: "https://www.linkedin.com/in/falkiya-afreen-604771239/",
   profilePhoto: "",
   profilePhotoZoom: 100,
   profilePhotoX: 50,

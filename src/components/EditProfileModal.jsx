@@ -7,6 +7,7 @@ export default function EditProfileModal({ isOpen, onClose, aboutDetails, onSave
   const [location, setLocation] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [linkedin, setLinkedin] = useState('');
   const [rolesInput, setRolesInput] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -19,6 +20,7 @@ export default function EditProfileModal({ isOpen, onClose, aboutDetails, onSave
       setLocation(aboutDetails.location || '');
       setEmail(aboutDetails.email || '');
       setPhone(aboutDetails.phone || '');
+      setLinkedin(aboutDetails.linkedin || '');
       setRolesInput(aboutDetails.roles ? aboutDetails.roles.join(', ') : '');
     }
   }, [aboutDetails, isOpen]);
@@ -41,6 +43,7 @@ export default function EditProfileModal({ isOpen, onClose, aboutDetails, onSave
       location,
       email,
       phone,
+      linkedin,
       profilePhoto: '',
       profilePhotoZoom: 100,
       profilePhotoX: 50,
@@ -164,6 +167,17 @@ export default function EditProfileModal({ isOpen, onClose, aboutDetails, onSave
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +91 98765 43210"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">LinkedIn Profile URL</label>
+                <input 
+                  type="url" 
+                  className="form-input" 
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  placeholder="https://linkedin.com/in/username"
                 />
               </div>
 

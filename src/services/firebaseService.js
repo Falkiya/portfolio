@@ -31,6 +31,7 @@ function mapProfileDoc(doc) {
     location: fields.location?.stringValue || '',
     email: fields.email?.stringValue || '',
     phone: fields.phone?.stringValue || '',
+    linkedin: fields.linkedin?.stringValue || '',
     profilePhoto: fields.profilePhoto?.stringValue || '',
     profilePhotoZoom: parseInt(fields.profilePhotoZoom?.integerValue || '100', 10),
     profilePhotoX: parseInt(fields.profilePhotoX?.integerValue || '50', 10),
@@ -224,6 +225,7 @@ export const firebaseService = {
         location: { stringValue: details.location || '' },
         email: { stringValue: details.email || '' },
         phone: { stringValue: details.phone || '' },
+        linkedin: { stringValue: details.linkedin || '' },
         profilePhoto: { stringValue: details.profilePhoto || '' },
         profilePhotoZoom: { integerValue: String(details.profilePhotoZoom || 100) },
         profilePhotoX: { integerValue: String(details.profilePhotoX !== undefined ? details.profilePhotoX : 50) },
@@ -237,7 +239,7 @@ export const firebaseService = {
     };
 
     try {
-      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/profile/about?updateMask.fieldPaths=name&updateMask.fieldPaths=summary&updateMask.fieldPaths=location&updateMask.fieldPaths=email&updateMask.fieldPaths=phone&updateMask.fieldPaths=profilePhoto&updateMask.fieldPaths=profilePhotoZoom&updateMask.fieldPaths=profilePhotoX&updateMask.fieldPaths=profilePhotoY&updateMask.fieldPaths=roles`;
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/profile/about?updateMask.fieldPaths=name&updateMask.fieldPaths=summary&updateMask.fieldPaths=location&updateMask.fieldPaths=email&updateMask.fieldPaths=phone&updateMask.fieldPaths=linkedin&updateMask.fieldPaths=profilePhoto&updateMask.fieldPaths=profilePhotoZoom&updateMask.fieldPaths=profilePhotoX&updateMask.fieldPaths=profilePhotoY&updateMask.fieldPaths=roles`;
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {

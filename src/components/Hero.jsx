@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Terminal, Mail, Phone, MapPin, Download, CheckCircle, Pencil } from 'lucide-react';
+import { LinkedinIcon } from './BrandIcons';
 
 export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile, isAdmin = false }) {
   const titles = aboutDetails.roles || [
@@ -217,6 +218,12 @@ export default function Hero({ aboutDetails = {}, onOpenEditModal, onSaveProfile
               <div className="contact-badge">
                 <Phone size={14} className="text-gradient" />
                 <a href={`tel:${aboutDetails.phone.replace(/\s+/g, '')}`}>{aboutDetails.phone}</a>
+              </div>
+            )}
+            {aboutDetails.linkedin && (
+              <div className="contact-badge">
+                <LinkedinIcon size={14} className="text-gradient" />
+                <a href={aboutDetails.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
               </div>
             )}
           </div>
